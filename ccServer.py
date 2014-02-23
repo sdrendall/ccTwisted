@@ -1,6 +1,8 @@
 # This is the ccServer module for the Gray Lab Conditioning Cage Installation
 # Sam Rendall
 
+# This Version uses Perspective Broker to handle RPC
+
 from twisted.internet.protocol import ServerFactory, Protocol
 from twisted.application import service
 from twisted.protocols import amp
