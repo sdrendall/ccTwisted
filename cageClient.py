@@ -1,6 +1,8 @@
 # This is the cageClient module for the Gray Lab Conditioning Cage Installation
 # Sam Rendall
 
+# This Version uses AMP for RPC!!
+
 from twisted.internet.protocol import ClientFactory
 from twisted.application import service
 from twisted.protocols import amp

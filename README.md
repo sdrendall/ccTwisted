@@ -9,3 +9,5 @@ Built based on a server written by Ofer Mazor (Harvard Medical School)
 
 Highly informed by Dave Peticolas's fantastic tutorial which can be found here:
 http://krondo.com/blog/?page_id=1327
+
+This version uses the AMP for RPC

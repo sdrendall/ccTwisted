@@ -1,6 +1,8 @@
 # This is the ccServer module for the Gray Lab Conditioning Cage Installation
 # Sam Rendall
 
+# This version uses AMP for RPC!!
+
 from twisted.internet.protocol import ServerFactory, Protocol
 from twisted.application import service
 from twisted.protocols import amp
