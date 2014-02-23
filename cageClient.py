@@ -10,7 +10,6 @@ import socket
 # Commands -- These can be called remotely
 class GetName(amp.Command):
 
-#    arguments = [('arg1', amp.String())]
     response = [('name', amp.String())]
 
 
@@ -19,10 +18,10 @@ class CageClientProtocol(amp.AMP):
     def madeConnection(self):
         print "Connection Made!"
 
+    @GetName.responder
     def getName(self):
-        return socket.gethostname()
+        return {'name': socket.gethostname()}
 
-    GetName.responder(getName)
 
 class CageClientFactory(ClientFactory):
 

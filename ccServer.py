@@ -12,18 +12,23 @@ from cageClient import GetName
 # Using AMP now instead of LineReceiver
 class RaspberryPiConnectionProtocol(amp.AMP):
 
-    name = ""
+    clientName = None
     idNo = None
 
     #ip = None
     #role = ""    
 
-    def connectionMade(self):
-        self.sendCommand(GetName)
+    def setClientName(self, result):
+        print result
+        print result['name']
+        self.clientName = result['name']
+        print self.clientName
 
-    def sendCommand(self, command):
-        response = self.callRemote(command)
-        print response
+    def connectionMade(self):
+        d = self.callRemote(GetName)
+        d.addCallback(self.setClientName) 
+        d.addErrback(log.err, "Failed to get client name")
+
 
 # Handles Connections from new Raspberry Pis
 class RaspberryPiServerFactory(ServerFactory):
