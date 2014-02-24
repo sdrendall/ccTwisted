@@ -1,44 +1,58 @@
 # This is the cageClient module for the Gray Lab Conditioning Cage Installation
 # Sam Rendall
 
-from twisted.internet.protocol import ClientFactory
+# This Version uses Perspective Broker to handle RPC
+
+from twisted.internet.protocol import Protocol
 from twisted.application import service
-from twisted.protocols import amp
+from twisted.spread import pb
 from twisted.python import log
 import socket
 
-# Commands -- These can be called remotely
-class GetName(amp.Command):
+# The Referenceable that each client passes to the Server
+class CageClientRef(pb.Referenceable):
 
-    response = [('name', amp.String())]
+    def remote_getName(self):
+        return socket.gethostname()
+
+    def remote_success(self):
+        print "It Worked!!!!\n Way to go team!!!"
 
 
-class CageClientProtocol(amp.AMP):
+class CageClientProtocol(pb.Broker):
 
-    def madeConnection(self):
+    ref = CageClientRef()
+    name = socket.gethostname()
+    idNo = None
+    serverRoot = None
+
+    def connectionMade(self):
         print "Connection Made!"
+        d = self.factory.getRootObject()
+        d.addErrback(log.err, "Couldn't retrieve root object")
+        d.addCallback(self.registerServer)
 
-    @GetName.responder
-    def getName(self):
-        return {'name': socket.gethostname()}
+    def registerServer(self, rootRef):
+        self.serverRoot = rootRef
+        print "Sending Ref to Server"
+        d = self.serverRoot.callRemote(registerPi, self.name, self.ref)
+        d.addErrback(log.err, "Failed to send remote reference")
+
+    def setIdNo(self, idNo):
+        self.idNo = idNo
 
 
-class CageClientFactory(ClientFactory):
+class CageClientFactory(pb.PBClientFactory):
 
     protocol = CageClientProtocol
+    
 
-
-def connectToServer(host, port):
+def main():
 
     from twisted.internet import reactor
     factory = CageClientFactory()
-    reactor.connectTCP(host, port, factory)
-
-
-def main():
-    from twisted.internet import reactor
-
-    connectToServer("localhost", 10000)
+    reactor.connectTCP('localhost', 10000, factory)
+    
     reactor.run()
 
 if __name__ == "__main__":
