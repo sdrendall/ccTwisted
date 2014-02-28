@@ -5,7 +5,6 @@
 
 from twisted.internet.protocol import ServerFactory, Protocol
 from twisted.application import service
-from twisted.protocols import amp
 from twisted.python import log
 from twisted.spread import pb
 
