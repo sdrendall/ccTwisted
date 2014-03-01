@@ -16,7 +16,7 @@ class CageClientRef(pb.Referenceable):
         return socket.gethostname()
 
     def remote_success(self):
-        print "It Worked!!!!\n Way to go team!!!"
+        print "It Worked!!!!\nWay to go team!!!"
 
 
 class CageClientProtocol(pb.Broker):
@@ -26,8 +26,8 @@ class CageClientProtocol(pb.Broker):
     idNo = None
     serverRoot = None
 
-    def connectionMade(self):
-        print "Connection Made!"
+    def connectionReady(self):
+        print "Connection Ready!"
         d = self.factory.getRootObject()
         d.addErrback(log.err, "Couldn't retrieve root object")
         d.addCallback(self.registerServer)
@@ -51,7 +51,7 @@ def main():
 
     from twisted.internet import reactor
     factory = CageClientFactory()
-    reactor.connectTCP('localhost', 10000, factory)
+    reactor.connectTCP('localhost', 8800, factory)
     
     reactor.run()
 

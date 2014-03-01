@@ -29,17 +29,19 @@ class ServerRoot(pb.Root):
         self.clientRefs[name].callRemote(success)
 
 
+    # FROM TUTORIAL!! FOR DEBUGGING!!!
+    def remote_takeTwo(self, two):
+        print "received a Two called", two
+        print "telling it to print(12)"
+        two.callRemote("print", 12)
+
+
 # Is instantiated/run for each connected Raspberry Pi
 # Using Perspective Broker (PB) now instead of LineReceiver
 class RaspberryPiConnectionProtocol(pb.Broker):
 
     clientName = None
     idNo = None
-
-    #ip = None
-    #role = ""    
-    def connectionMade(self):
-        print "Connection Made!"
 
     # Stores the the hostname of the connected client in self.clientName
     def setClientName(self, name):
@@ -68,12 +70,9 @@ class RaspberryPiServerFactory(pb.PBServerFactory):
 def main():
     from twisted.internet import reactor
 
-    serverRoot = ServerRoot()
-    factory = RaspberryPiServerFactory(serverRoot)
+    factory = RaspberryPiServerFactory(ServerRoot())
 
-    reactor.listenTCP(10000, factory, interface='localhost')
-
-    print "Listening on 127.0.0.1:10000 ..."
+    reactor.listenTCP(8800, factory)
 
     reactor.run()
 

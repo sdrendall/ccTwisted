@@ -22,8 +22,6 @@ class RaspberryPiConnectionProtocol(pb.Broker):
 
     #ip = None
     #role = ""    
-    def connectionMade(self):
-        print "Connection Made!"
 
     # Stores the the hostname of the connected client in self.clientName
     def setClientName(self, name):
