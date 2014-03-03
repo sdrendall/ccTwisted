@@ -28,6 +28,11 @@ class ServerRoot(pb.Root):
         print self.clientNames
         self.clientRefs[name].callRemote(success)
 
+    def remote_takeTwo(self, two):
+        print "received a Two called", two
+        print "telling it to print(12)"
+        two.callRemote("print", 12)
+
 
 # Is instantiated/run for each connected Raspberry Pi
 # Using Perspective Broker (PB) now instead of LineReceiver
@@ -35,11 +40,6 @@ class RaspberryPiConnectionProtocol(pb.Broker):
 
     clientName = None
     idNo = None
-
-    #ip = None
-    #role = ""    
-    def connectionMade(self):
-        print "Connection Made!"
 
     # Stores the the hostname of the connected client in self.clientName
     def setClientName(self, name):

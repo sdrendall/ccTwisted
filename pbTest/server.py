@@ -22,20 +22,20 @@ class RaspberryPiConnectionProtocol(pb.Broker):
 
     #ip = None
     #role = ""    
-    def connectionMade(self):
-        print "Connection Made!"
+    def connectionReady(self):
+        print "Connection Ready!"
 
     # Stores the the hostname of the connected client in self.clientName
-    def setClientName(self, name):
-        print "recieved:", result
-        self.clientName = name
-        print "Client No:", self.idNo, "Is named:", self.clientName
+    #def setClientName(self, name):
+     #   print "recieved:", result
+      #  self.clientName = name
+       # print "Client No:", self.idNo, "Is named:", self.clientName
 
 
 # Handles Connections from new Raspberry Pis
 class RaspberryPiServerFactory(pb.PBServerFactory):
 
-    protocol = pb.Broker
+    protocol = RaspberryPiConnectionProtocol
     currentProtocolId = 0
 
     def getNextProtocolId(self):
