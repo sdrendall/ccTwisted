@@ -22,8 +22,11 @@ class RaspberryPiConnectionProtocol(pb.Broker):
 
     #ip = None
     #role = ""    
+<<<<<<< HEAD
     def connectionReady(self):
         print "Connection Ready!"
+=======
+>>>>>>> cc0544d22f876f80f865c39952579373575ddd7b
 
     # Stores the the hostname of the connected client in self.clientName
     #def setClientName(self, name):
