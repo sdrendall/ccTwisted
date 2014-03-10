@@ -15,7 +15,7 @@ class Two(pb.Referenceable):
 
 class CageClientProtocol(pb.Broker):
 
-    ref = CageClientRef()
+    #ref = CageClientRef()
     name = socket.gethostname()
     idNo = None
     serverRoot = None
@@ -44,7 +44,7 @@ class CageClientFactory(pb.PBClientFactory):
 def main():
     two = Two()
     factory = CageClientFactory()
-    reactor.connectTCP("localhost", 10000, factory)
+    reactor.connectTCP("localhost", 8800, factory)
     def1 = factory.getRootObject()
     def1.addCallback(got_obj, two) # hands our 'two' to the callback
     reactor.run()
