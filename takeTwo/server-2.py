@@ -5,6 +5,10 @@ class ServerRoot(pb.Root):
     def remote_echo(self, line):
         print line
 
+    def remote_registerPi(self, name, ref):
+        print name
+        ref.callRemote("setID", 1)
+
 
 class myBroker(pb.Broker):
     pass
