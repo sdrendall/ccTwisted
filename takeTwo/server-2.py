@@ -5,12 +5,6 @@ class ServerRoot(pb.Root):
     def remote_echo(self, line):
         print line
 
-    # FROM TUTORIAL!! FOR DEBUGGING!!!
-    def remote_takeTwo(self, two):
-        print "received a Two called", two
-        print "telling it to print(12)"
-        two.callRemote("print", 12)
-
 
 class myBroker(pb.Broker):
     pass
