@@ -43,7 +43,7 @@ class myClientBroker(pb.Broker):
 
     def registerWithServer(self, *args):
         d = self.serverRoot.callRemote("registerPi", self.name, self.commands)
-
+        return d
 
 class myPBClientFactory(pb.PBClientFactory):
 
@@ -64,10 +64,12 @@ def main():
 
     reactor.run()
 
-def got_root(root, msg):
+def got_root(root):
 
     print "got root object!"
-    root.callRemote("echo", msg)
+    dic = {'one': 1, 'two': 2, 'str': 'hello world', 'd': {'fee': 'fum', 'cock': 'balls'}}
+    root.callRemote("echo", dic)
+    return root
 
 if __name__ == "__main__":
     main()
