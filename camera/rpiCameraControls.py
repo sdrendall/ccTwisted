@@ -28,7 +28,7 @@ class CameraControls(pb.Referenceable):
 
     defaultVideoParams = {
     'duration': 10,    # Video duration, in seconds
-    'width': 854       # Frame width, in pixels       
+    'width': 854,      # Frame width, in pixels       
     'height': 480,     # Frame height, in pixels
     'output': 'filename', # Output, default to a file
     'format': 'mjpeg'  # The video format
