@@ -11,11 +11,13 @@ camera = picamera.PiCamera()
 
 class CameraControls(pb.Referenceable):
 
+    # Containers for objects containing methods for modifying ongoing camera processes
     activeTimelapse = None
     activeTimelapseCanceller = None
     activeRecording = None
     activeRecordingCanceller = None
 
+    # Dictionaries containing default parameters for video and timelapse
     defaultTimelapseParams = {
     'period': 10, # Frame capture period, in seconds
     'duration': None,  # Total timelapse duration, in seconds
@@ -29,7 +31,7 @@ class CameraControls(pb.Referenceable):
     'width': 854       # Frame width, in pixels       
     'height': 480,     # Frame height, in pixels
     'output': 'filename', # Output, default to a file
-    'format': 'mjpeg'
+    'format': 'mjpeg'  # The video format
     }
 
     def remote_startTimelapse(self, params={}):
@@ -84,7 +86,18 @@ class CameraControls(pb.Referenceable):
         if vParams['duration'] is not None:
             self.activeRecordingCanceller = reactor.callLater(vParams['duration'], self.remote_stopVideo)
 
-
+    def remote_stopVideo(self):
+        if self.activeVideo is not None:
+            # activeVideo currently becomes Boolean when a video is being used, well just set it back to None
+            # for consistency's sake
+            camera.stop_recording()
+            self.activeVideo = None
+            # Cancel the delayed cancel call 
+            if self.activeVideoCanceller is not None:
+                avc, self.activeVideoCanceller = self.activeVideoCanceller, None
+                avc.cancel()
+        else:
+            print "No Active Video Recording!"
 
 
 
