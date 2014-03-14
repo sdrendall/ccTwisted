@@ -2,6 +2,11 @@ from twisted.spread import pb
 
 class ServerRoot(pb.Root):
 
+    def rootObject(self, broker):
+        return ProxyRoot()
+
+class ProxyRoot(pb.Referenceable):
+
     def remote_echo(self, line):
         print line
 

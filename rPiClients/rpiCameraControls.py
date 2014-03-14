@@ -57,6 +57,7 @@ class CameraControls(pb.Referenceable):
         if tlParams['duration'] is not None:
             self.activeTimelapseCanceller = reactor.callLater(tlParams['duration'], self.remote_stopTimelapse)
 
+
     def remote_stopTimelapse(self):
         if self.activeTimelapse is not None:
             # Dereference the timelapse to indicate that it is over
@@ -68,6 +69,7 @@ class CameraControls(pb.Referenceable):
                 tlc.cancel()
         else:
             print "No Active Timelapse!"
+
 
     def remote_recordVideo(self, params={}):
         if self.activeTimelapse is not None:
@@ -85,6 +87,7 @@ class CameraControls(pb.Referenceable):
         # Schedule the ending
         if vParams['duration'] is not None:
             self.activeRecordingCanceller = reactor.callLater(vParams['duration'], self.remote_stopVideo)
+
 
     def remote_stopVideo(self):
         if self.activeVideo is not None:
