@@ -33,17 +33,14 @@ class myClientBroker(pb.Broker):
         pb.Broker.connectionReady(self)
         # Get serverRoot from the server and register
         d = self.factory.getRootObject()
-        d.addBoth(self.registerRoot, getRootFailed)
-        d.addCallback(self.registerWithServer)
+        d.addCallbacks(got_root, getRootFailed)
+        d.addCallback(self.registerRoot)
         d.addErrback(serverRegistrationFailed)
 
 
     def registerRoot(self, obj, *args):
         self.serverRoot = obj
 
-    def registerWithServer(self, *args):
-        d = self.serverRoot.callRemote("registerPi", self.name, self.commands)
-        return d
 
 class myPBClientFactory(pb.PBClientFactory):
 
@@ -65,7 +62,6 @@ def main():
     reactor.run()
 
 def got_root(root):
-
     print "got root object!"
     dic = {'one': 1, 'two': 2, 'str': 'hello world', 'd': {'fee': 'fum', 'cock': 'balls'}}
     root.callRemote("echo", dic)

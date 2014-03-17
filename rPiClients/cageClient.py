@@ -1,5 +1,6 @@
 from twisted.spread import pb
-import socket, clientErrbacks
+import socket, clientErrbacks, rpiCameraControls
+
 
 class configCommands(pb.Referenceable):
     """
@@ -12,10 +13,12 @@ class configCommands(pb.Referenceable):
 class RPiClientBroker(pb.Broker):
 
     serverRoot = None
+    cameraControls = rpiCameraControls.CameraControls()
+
 
     def __init__(self, isClient=1, security=globalSecurity):
         pb.Broker.__init__(self, isClient, security)
-        self.name = factory.name
+        self.name = self.factory.name
 
     # Fires once PB communication has been established
     def connectionReady(self):
@@ -31,7 +34,16 @@ class RPiClientBroker(pb.Broker):
         self.serverRoot = root
 
     def callback_registerWithServer(self, *args):
-        d = self.serverRoot.callRemote("registerPi", self.name, self.commands)
+        # Package my identifiers in a dict
+        iden = {
+        'name': self.name
+        }
+        # Package my referenceables in a dict
+        commands = {
+        'camera': self.cameraControls
+        }
+        # Send them to server
+        d = self.serverRoot.callRemote("registerPi", iden, commands)
         return d
 
 class RPiClientFactory(pb.PBClientFactory):
