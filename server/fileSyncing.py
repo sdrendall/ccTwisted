@@ -3,7 +3,7 @@ import os
 rootPath = "~/Desktop"
 
 
-def IdGenerator(di):
+def IdGenerator(id):
     """ Generator to generate ID numbers for timelapses,
     videos, mice... 
     """
@@ -13,8 +13,23 @@ def IdGenerator(di):
         if not str(mouseId) in di:
             yield str(mouseId)
 
+def ensureDirectory(path):
+    """ Ensures that a directory exists at the given path.  If a directory 
+    is not found, attempts to make one.  Returns a boolean stating whether or not
+    a directory exists at the given path"""
+    if path and os.path.isdir(path):
+            return True
+        else:
+            try:
+                os.mkdir(path)
+                return True
+            except OSError:
+                print "Could not create directory %r" % path
+                return False
 
-class Experiment():
+
+
+class Experiment:
 
     # This is the dict that will be saved as JSON.
     # Ideally the entire Experiment object (including subobjects)
@@ -27,28 +42,30 @@ class Experiment():
     }
 
     mice = {}
-    mouseIdGenerator = IdGenerator(contents['mice'])
+    getNextMouseId = IdGenerator(contents['mice'])
 
-    def createExperimentDirectory(self):
-        dirName = "experiment_{}".format(self.expIdNo)
-        basePath = os.path.join(rootPath, dirName)
-        if os.path.isdir(basePath):
-            # I should probably check to make sure this isn't 
-            # a different, already existing experiment
-            # Or warn user of a merge
-            print "Directory Already Exists!"
+    def setBaseDirectory(self, path=self.generateExperimentDirectoryPath()):
+        if ensureDirectory(path):
+            self.contents['basePath'] = path
         else:
-            os.mkdir(basePath)
-        return basePath
+            print "Experiment directory not set!"
 
+    def generateExperimentDirectoryPath(self):
+        """ Returns a standardized path and directory name for an experiment directory
+        experiment directory is named using the expIdNo"""
+
+        dirName = "experiment_{}".format(self.contents["expIdNo"])
+        basePath = os.path.join(rootPath, dirName)
+        return basePath
 
     def createMouse(self, mouseId=None):
         if mouseId is None:
             mouseId = self.getNextMouseId()
         # Make sure the base directory is there
-        self.checkExperimentDirectory()
+        ensureDirectory(self.contents['basePath'])
         self.mice[mouseId] = Mouse(self, mouseId)
         self.contents['mice'][mouseId] = self.mice[mouseId].createMouseDirectory()
+
 
 
 class Mouse:
@@ -62,9 +79,11 @@ class Mouse:
     }
 
     def __init__(self, experiment, mouseId):
-        self.basePath = createMouseDirectory
+        ensureMouseDirectory()
         self.id = mouseId
         self.experiment = experiment
+
+    def ensureMouseDirectory()
 
     def createMouseDirectory(self):
         # Create mouse directory
@@ -72,16 +91,14 @@ class Mouse:
         mousePath = os.path.join(self.basePath, mousePath)
         if not os.path.isdir(mousePath):
             os.mkdir(mousePath)
-            self.mousePaths[mouseId] = mousePath
+            self.contents['basePath'] = mousePath
         else:
             print "Directory corresponding to mouse {} already exists in current experiment!".format(mouseId)
-        # Store id (probably unnecessary)
-        if not mouseId in self.mouseIds:
-            self.mouseIds.append(mouseId)
 
+    def createNewTimelapse
 
-    def checkExperimentDirectory(self):
+class Timelapse:
 
+class Video:
 
-    def createNewTimelapsePath(self):
-
+class Log
