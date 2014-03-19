@@ -1,4 +1,4 @@
-import os
+import os, datetime
 from pprint import pprint
 
 rootPath = os.path.expanduser("~/Desktop/testExperiments")
@@ -79,12 +79,7 @@ class Experiment:
 
 
 # Mouse functions
-    def createMouse(self, mouseId=None):
-        # Create a mouse id if none was specified
-        # Not sure why I would want to do this
-        if mouseId is None:
-            mouseId = self.getNextMouseId()
-
+    def createMouse(self, mouseId):
         # Create a new mouse directory
         try:
             mousePath = self.createMouseDirectory(mouseId)
@@ -177,6 +172,12 @@ class Mouse:
         # Return Timelapse attributes dict
         return self.attributes['timelapses'][tlId]
 
+# Misc. Useful functions
+def generateDateString():
+    dt = datetime.datetime.now()
+    dateString = "{:04}{:02}{:02}_{:02}{:02}".\
+            format(dt.year, dt.month, dt.day, dt.hour, dt.minute)
+    return dateString
 
 ## EXCEPTIONS!
 class ExperimentExists(Exception):
