@@ -1,4 +1,4 @@
-import os, datetime, subprocess
+import os, datetime, subprocess, json
 from pprint import pprint
 
 rootPath = os.path.expanduser("~/Desktop/testExperiments")
@@ -63,6 +63,15 @@ def createExperiment(expId):
         else:
             raise DirCreationFailed(expPath)
 
+def loadExperiment(filePath=None):
+    # Load the experiment's attributes dict from the JSON file
+    jsonFile = open(filePath, 'r')
+    expAttrs = json.load(jsonFile)
+    jsonFile.close()
+
+    # Instantiate and return the experiment 
+    return Experiment(expAttrs)
+
 
 
 class Experiment:
@@ -88,10 +97,27 @@ class Experiment:
         for key, val in attrs.iteritems():
             self.attributes[key] = val
 
+        # Unpack mice, if passed mouse dicts, occurs when an old experiment is loaded
+        self.unpackMice()
+
+        # Pointer to JSON save file
+        self.jsonPath = self.generateJsonPath()
+
         # Create generators for Ids
-        self.getNextMouseId = IdGenerator(attributes['mice'])
+        self.getNextMouseId = IdGenerator(self.attributes['mice'])
         self.timelapseIdGenerator = IdGenerator()
         self.videoIdGenerator = IdGenerator()
+        self.logIdGenerator = IdGenerator()
+
+# JSON functions
+    def generateJsonPath(self):
+        jsonName = "{}.json".format(self.attributes['id'])
+        return os.path.join(self.attributes['path'], jsonName)
+
+    def exportToJSON(self):
+        saveFile = open(self.jsonPath, 'w')
+        saveFile.write(json.dumps(self.attributes,  sort_keys=True, indent=4, separators=(',', ': ')))
+        saveFile.close()
 
 # Mouse functions
     def createMouse(self, mouseId):
@@ -119,11 +145,9 @@ class Experiment:
         # Instantiate a mouse and reference its attributes dict
         mouse = Mouse(self, attrs)
         self.mice[mouseId] = mouse
-        self.attributes['mice'][mouseId] = self.mice[mouseId].attributes
+        self.attributes['mice'][mouseId] = mouse.attributes
 
-        return self.mice[mouseId]
-
-
+        return mouse
 
     def ensureMouse(self, mouseId):
         if mouseId not in self.attributes['mice']:
@@ -143,6 +167,13 @@ class Experiment:
             return mousePath
         else:
             raise DirCreationFailed(mousePath)
+
+    def unpackMice(self):
+        for key, mouseDict in self.attributes['mice'].iteritems():
+            ensureDirectory(mouseDict['path'])
+            self.mice[key] = Mouse(self, mouseDict)
+
+
 
 
 class Mouse:
@@ -201,11 +232,19 @@ class Mouse:
         return self.attributes['videos'][vidId]
 
 
+    def createLog(self):
+        # Same deal as Video creation
+        logId = generateDateId(self.experiment.logIdGenerator)
+        self.attributes['logs'][logId] = {
+        'id': logId,
+        'path': self.attributes['logPath'] 
+        }
 
 ## EXCEPTIONS!
 class ExperimentExists(Exception):
     def __init__(self, path):
         self.path = path
+
     def __str__(self):
         errString = "Experiment already exists at {}".format(path)
         return repr(errString)
@@ -213,6 +252,7 @@ class ExperimentExists(Exception):
 class DirCreationFailed(Exception):
     def __init__(self, path):
         self.path = path
+
     def __str__(self):
         errString = "Failed to create a directory at {}".format(path)
         return repr(errString)
@@ -220,20 +260,65 @@ class DirCreationFailed(Exception):
 
 # For Debugging
 def main():
+    # Create an experiment and test timelapse, video and log creation
+    jsonPath = testNewExperiment()
+    # Load an experiment and print out the results
+    testLoadedExperiment(jsonPath)
+
+
+def testNewExperiment():
+    print "Testing a new experiment!\n"
+    # Create an experiment
     experiment = createExperiment('testExp')
+    # Create some Mice
     mice = {}
     for mId in range(1,5):
         mice[mId] = experiment.createMouse(mId)
-
+    # Create some Timelapses
     tlRefs =[]
     for mouseNo in [1, 3, 3, 2, 4, 1]:
         tlRefs.append(mice[mouseNo].createTimelapse())
+    # Create some Videos
+    vidRefs = []
+    for mouseNo in [2, 4, 4, 2, 3, 1]:
+        vidRefs.append(mice[mouseNo].createVideo())
+    # Create some logs
+    logRefs = []
+    for mouseNo in [2, 1, 1, 3, 4, 2]:
+        logRefs.append(mice[mouseNo].createLog())
 
+    # Print the results
     print "Timelapse References:"
     pprint(tlRefs)
+    print '\n'
 
+    print "Video References:"
+    pprint(vidRefs)
+    print'\n'
+
+    print "Log References:"
+    pprint(logRefs)
+    print'\n'
+    
     print "Experiment Attributes:"
     pprint(experiment.attributes)
+    print'\n'
+
+    # Export attributes to json
+    experiment.exportToJSON()
+
+    return experiment.jsonPath
+
+def testLoadedExperiment(jsonPath):
+    print "Testing a loaded Experiment!\n"
+    experiment = loadExperiment(jsonPath)
+
+    print "Experiment Attributes"
+    pprint(experiment.attributes)
+    print'\n'
+    print "Mouse Objects:"
+    pprint(experiment.mice)
+
 
 if __name__ == "__main__":
     main()
