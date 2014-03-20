@@ -3,45 +3,6 @@ from pprint import pprint
 
 rootPath = os.path.expanduser("~/Desktop/testExperiments")
 
-# Misc. Useful functions
-def IdGenerator(myDict={}):
-    """ Generator to generate ID numbers for timelapses,
-    videos, mice... 
-    """
-    IdNo = 0
-    while True:
-        IdNo += 1
-        if not str(IdNo) in myDict:
-            yield str(IdNo)
-
-
-def generateDateString():
-    dt = datetime.datetime.now()
-    dateString = "{:04}{:02}{:02}_{:02}{:02}".\
-            format(dt.year, dt.month, dt.day, dt.hour, dt.minute)
-    return dateString
-
-
-def generateDateId(generator):
-    return "{}_{}".format(generateDateString(), generator.next())
-
-
-def ensureDirectory(path):
-    """ Ensures that a directory exists at the given path.  If a directory 
-    is not found, attempts to make one.  Returns a boolean stating whether or not
-    a directory exists at the given path"""
-    if path and os.path.isdir(path):
-        return True
-    else:
-        try:
-            os.mkdir(path)
-            return True
-        except OSError, e:
-            print "Could not create directory %r" % path
-            print e
-            return False
-
-
 # Interface functions
 def createExperiment(expId):
     dirName = "Experiment_{}".format(expId)
@@ -88,7 +49,11 @@ class Experiment:
             'id': None,
             'dateCreated': subprocess.check_output("date", shell=True),
             # References to each mouse's dict, timelapses and video dicts are here
-            'mice': {}
+            'mice': {},
+            # Lists for IdGenerators
+            'tlIdList': [],
+            'vidIdList': [],
+            'logIdList': []
         }
 
         self.mice = {}
@@ -105,9 +70,9 @@ class Experiment:
 
         # Create generators for Ids
         self.getNextMouseId = IdGenerator(self.attributes['mice'])
-        self.timelapseIdGenerator = IdGenerator()
-        self.videoIdGenerator = IdGenerator()
-        self.logIdGenerator = IdGenerator()
+        self.timelapseIdGenerator = IdGenerator(self.attributes['tlIdList'])
+        self.videoIdGenerator = IdGenerator(self.attributes['vidIdList'])
+        self.logIdGenerator = IdGenerator(self.attributes['logIdList'])
 
 # JSON functions
     def generateJsonPath(self):
@@ -239,6 +204,46 @@ class Mouse:
         'id': logId,
         'path': self.attributes['logPath'] 
         }
+
+# Misc. Useful functions
+def IdGenerator(idList=[]):
+    """ Generator to generate ID numbers for timelapses,
+    videos, mice... 
+    """
+    idNo = 0
+    while True:
+        idNo += 1
+        if not idNo in idList
+            idList.append(idNo)
+            yield idNo
+
+
+def generateDateString():
+    dt = datetime.datetime.now()
+    dateString = "{:04}{:02}{:02}_{:02}{:02}".\
+            format(dt.year, dt.month, dt.day, dt.hour, dt.minute)
+    return dateString
+
+
+def generateDateId(generator):
+    return "{}_{}".format(generateDateString(), generator.next())
+
+
+def ensureDirectory(path):
+    """ Ensures that a directory exists at the given path.  If a directory 
+    is not found, attempts to make one.  Returns a boolean stating whether or not
+    a directory exists at the given path"""
+    if path and os.path.isdir(path):
+        return True
+    else:
+        try:
+            os.mkdir(path)
+            return True
+        except OSError, e:
+            print "Could not create directory %r" % path
+            print e
+            return False
+
 
 ## EXCEPTIONS!
 class ExperimentExists(Exception):
