@@ -1,10 +1,10 @@
-import os, datetime
+import os, datetime, subprocess
 from pprint import pprint
 
 rootPath = os.path.expanduser("~/Desktop/testExperiments")
 
-
-def IdGenerator(myDict):
+# Misc. Useful functions
+def IdGenerator(myDict={}):
     """ Generator to generate ID numbers for timelapses,
     videos, mice... 
     """
@@ -13,6 +13,18 @@ def IdGenerator(myDict):
         IdNo += 1
         if not str(IdNo) in myDict:
             yield str(IdNo)
+
+
+def generateDateString():
+    dt = datetime.datetime.now()
+    dateString = "{:04}{:02}{:02}_{:02}{:02}".\
+            format(dt.year, dt.month, dt.day, dt.hour, dt.minute)
+    return dateString
+
+
+def generateDateId(generator):
+    return "{}_{}".format(generateDateString(), generator.next())
+
 
 def ensureDirectory(path):
     """ Ensures that a directory exists at the given path.  If a directory 
@@ -30,6 +42,7 @@ def ensureDirectory(path):
             return False
 
 
+# Interface functions
 def createExperiment(expId):
     dirName = "Experiment_{}".format(expId)
     expPath = os.path.join(rootPath, dirName) 
@@ -42,7 +55,7 @@ def createExperiment(expId):
             # If the directory can be created, instantiate a new experiment
             # and return it
             attrs = {
-            'basePath': expPath,
+            'path': expPath,
             'id': expId
             }
             experiment = Experiment(attrs)
@@ -57,23 +70,28 @@ class Experiment:
     handles ID generation and responsible for checking for the existence of mice 
     """
 
-    # This is the dict that will be saved as JSON.
-    # Ideally the entire Experiment object (including subobjects)
-    # Could be reconstructed from this info
-    attributes = {
-        'basePath': None,
-        'id': None,
-        # References to the mice, timelapses and video dicts are here
-        'mice': {}
-    }
-
-    mice = {}
-    getNextMouseId = IdGenerator(attributes['mice'])
-
     def __init__(self, attrs):
+        # This is the dict that will be saved as JSON.
+        # Ideally the entire Experiment object (including subobjects)
+        # Could be reconstructed from this info
+        self.attributes = {
+            'path': None,
+            'id': None,
+            'dateCreated': subprocess.check_output("date", shell=True),
+            # References to each mouse's dict, timelapses and video dicts are here
+            'mice': {}
+        }
+
+        self.mice = {}
+
+        # Update attributes
         for key, val in attrs.iteritems():
             self.attributes[key] = val
 
+        # Create generators for Ids
+        self.getNextMouseId = IdGenerator(attributes['mice'])
+        self.timelapseIdGenerator = IdGenerator()
+        self.videoIdGenerator = IdGenerator()
 
 # Mouse functions
     def createMouse(self, mouseId):
@@ -88,28 +106,39 @@ class Experiment:
         # Package initializing attributes
         attrs = {
             'id': mouseId,
-            'basePath': mousePath
+            'path': mousePath
         }
 
+        # Create paths for timelapses, videos and logs
+        for dirName, pathKey in [('timelapes', 'tlPath'), ('videos','vidPath'), ('logs','logPath')]:
+            path = os.path.join(mousePath, dirName)
+            ensureDirectory(path)
+            attrs[pathKey] = path
+
+
         # Instantiate a mouse and reference its attributes dict
-        self.mice[mouseId] = Mouse(attrs)
+        mouse = Mouse(self, attrs)
+        self.mice[mouseId] = mouse
         self.attributes['mice'][mouseId] = self.mice[mouseId].attributes
+
+        return self.mice[mouseId]
+
 
 
     def ensureMouse(self, mouseId):
         if mouseId not in self.attributes['mice']:
             createMouse(mouseId)
         else:
-            ensureDirectory(self.attributes['mice'][mouseId])
+            ensureDirectory(self.attributes['mice'][mouseId]['path'])
 
 
     def createMouseDirectory(self, mouseId):
         # Make sure the base directory is there
-        ensureDirectory(self.attributes['basePath'])
+        ensureDirectory(self.attributes['path'])
 
         # Create mouse directory
         dirName = "mouse_{}".format(mouseId)
-        mousePath = os.path.join(self.attributes['basePath'], dirName)
+        mousePath = os.path.join(self.attributes['path'], dirName)
         if ensureDirectory(mousePath):
             return mousePath
         else:
@@ -120,45 +149,58 @@ class Mouse:
     """ This is the mouse class.  Instantiated for each mouse.
     Maintains timelapse, video and log paths for this mouse """
 
-    attributes = {
-    'basePath': None,
-    'id': None,
-    'timelapses': None,
-    'videos': None,
-    'logs': None
-    }
-
-    def __init__(self, attrs):
+    def __init__(self, experiment, attrs):
+        # Create a new attributes dict for each mouse
+        self.attributes = {
+            'timelapses': {},
+            'videos': {},
+            'logs': {}
+            }
+        # Reference the experiment 
+        self.experiment = experiment
+        # Add/update keys+values
         for key, val in attrs.iteritems():
             self.attributes[key] = val
         
 
     def createTimelapse(self):
         # Generate New Id, use date stamp
-        tlId = generateDateString()
+        tlId = generateDateId(self.experiment.timelapseIdGenerator)
 
         # Create Timelapse Path
-        dirName = "timelapse_{}".format(tlId)
-        tlPath = os.path.join(self.attributes['basePath'], dirName)
-        ensureDirectory(tlPath)
-        ## TODO: Do something if ensureDirectory fails
+        tlPath = self.createTimelapsePath(tlId)
 
         # Store timelapse attributes in a dict
         self.attributes['timelapses'][tlId] = {
-        'basePath': tlPath,
-        'id': tlId,
-        'mouse': self.attributes['id']
+        'path': tlPath,
+        'id': tlId
         }
 
         # Return Timelapse attributes dict
         return self.attributes['timelapses'][tlId]
 
-# Misc. Useful functions
-def generateDateString():
-    dt = datetime.datetime.now()
-    dateString = "{:04}{:02}{:02}_{:02}{:02}".\
-            format(dt.year, dt.month, dt.day, dt.hour, dt.minute)
-    return dateString
+
+    def createTimelapsePath(self, tlId):
+        dirName = "timelapse_{}".format(tlId)
+        tlPath = os.path.join(self.attributes['tlPath'], dirName)
+        if ensureDirectory(tlPath):
+            return tlPath
+        else:
+            raise DirCreationFailed(tlPath)
+
+
+    def createVideo(self):
+        # Generate Id
+        vidId = generateDateId(self.experiment.videoIdGenerator)
+        # Store attributes in a dict
+        self.attributes['videos'][vidId] = {
+        'id': vidId,
+        'path': self.attributes['vidPath']
+        }
+        # Return Dict
+        return self.attributes['videos'][vidId]
+
+
 
 ## EXCEPTIONS!
 class ExperimentExists(Exception):
@@ -179,12 +221,13 @@ class DirCreationFailed(Exception):
 # For Debugging
 def main():
     experiment = createExperiment('testExp')
+    mice = {}
     for mId in range(1,5):
-        experiment.createMouse(mId)
+        mice[mId] = experiment.createMouse(mId)
 
     tlRefs =[]
     for mouseNo in [1, 3, 3, 2, 4, 1]:
-        tlRefs.append(experiment.createTimelapse(mouseNo))
+        tlRefs.append(mice[mouseNo].createTimelapse())
 
     print "Timelapse References:"
     pprint(tlRefs)
