@@ -64,14 +64,11 @@ class Experiment:
         'basePath': None,
         'id': None,
         # References to the mice, timelapses and video dicts are here
-        'mice': {},
-        'timelapses': {},
-        'videos': {}
+        'mice': {}
     }
 
     mice = {}
     getNextMouseId = IdGenerator(attributes['mice'])
-    getNextTimelapseId = IdGenerator(attributes['timelapses'])
 
     def __init__(self, attrs):
         for key, val in attrs.iteritems():
@@ -119,25 +116,6 @@ class Experiment:
             raise DirCreationFailed(mousePath)
 
 
-# Media functions
-    def createTimelapse(self, mouseId):
-        """ This function is called whenever a timelapse should be created,
-        A new ID is generated and passed to the mouse with mouseId
-        returns a reference to the new timelapse's attributes dict
-        """
-        # Ensure mouse refs and path exist
-        self.ensureMouse(mouseId)
-
-        # Generate New Id
-        tlId = getNextTimelapseId()
-
-        # Reference Timelapse Attrs
-        self.attributes['timelapses'][tlId] = self.mice[mouseId].createTimelapse(tlId)
-
-        # Send back to reference to the timelapse attributes dict
-        return self.attributes['timelapses'][tlId]
-
-
 class Mouse:
     """ This is the mouse class.  Instantiated for each mouse.
     Maintains timelapse, video and log paths for this mouse """
@@ -155,7 +133,10 @@ class Mouse:
             self.attributes[key] = val
         
 
-    def createTimelapse(self, tlId):
+    def createTimelapse(self):
+        # Generate New Id, use date stamp
+        tlId = generateDateString()
+
         # Create Timelapse Path
         dirName = "timelapse_{}".format(tlId)
         tlPath = os.path.join(self.attributes['basePath'], dirName)
